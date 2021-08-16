@@ -1,0 +1,6 @@
+{
+    "jwtPrivateKey": "chatApp_jwtPrivateKey",
+    "port": "8080",
+    "db": "mongodb://localhost/chatDB",
+    "requiresAuth": false
+}

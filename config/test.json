@@ -1,0 +1,5 @@
+{
+    "db": "mongodb://localhost/chatDB_tests",
+    "jwtPrivateKey": "1234"
+
+}
