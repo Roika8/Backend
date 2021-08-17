@@ -3,7 +3,7 @@ const express = require('express');
 const usersService = require('./Services/usersService');
 const app = express();
 const server = require('http').createServer(app);
-const PORT = 8080;
+const PORT = 8080||process.env.PORT;
 const userService = require('./Socket/UsersService')
 
 if (!config.get('jwtPrivateKey')) {
@@ -13,8 +13,8 @@ if (!config.get('jwtPrivateKey')) {
 
 //DB connection
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/chatDB')
-// mongoose.connect(config.get('db'))
+// mongoose.connect('mongodb://localhost/chatDB')
+mongoose.connect(config.get('db'))
     .then(() => console.log(`connected to ${config.get('db')} database`))
     .catch(() =>
         console.log('somthing went wrong connection to the data base'));
@@ -33,8 +33,7 @@ app.use(function (req, res, next) {
 app.use('/api/users', require('./Router/users'))
 app.use('/api/chatRoom', require('./Router/chatRoom'))
 app.use('/api/message', require('./Router/messages'))
-// app.use(require('./Socket/socket'))
-//Add sockets
+
 
 
 
