@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/b3bda2a5-5aa9-4d66-82a9-deb89841abe0/resourceGroups/appsvc_linux_centralus_premium/providers/Microsoft.Web/sites/SoaProjectBackend",
+    "appService.deploySubpath": "."
+}

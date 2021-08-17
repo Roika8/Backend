@@ -3,7 +3,7 @@ const express = require('express');
 const usersService = require('./Services/usersService');
 const app = express();
 const server = require('http').createServer(app);
-const PORT = config.get('port') || process.env.PORT;
+const PORT =8080;
 const userService = require('./Socket/UsersService')
 
 if (!config.get('jwtPrivateKey')) {
@@ -38,11 +38,11 @@ app.use('/api/message', require('./Router/messages'))
 
 
 //Server up
-server.listen(PORT, () => {
+const serverSocket=server.listen(PORT, () => {
     console.log(`Server is up on: ${PORT}`);
 });
 
-const io = require('socket.io')(8900, {
+const io = require('socket.io')(serverSocket, {
     cors: {
         origin: '*',
     }

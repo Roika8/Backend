@@ -1,6 +1,6 @@
 {
     "jwtPrivateKey": "chatApp_jwtPrivateKey",
     "port": "8080",
-    "db": "mongodb://localhost/chatDB",
+    "db": "mongodb+srv://314806878:314806878@cluster0.yd6h6.mongodb.net/ChatgammonDB?retryWrites=true&w=majority",
     "requiresAuth": false
 }
