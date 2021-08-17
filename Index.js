@@ -3,7 +3,7 @@ const express = require('express');
 const usersService = require('./Services/usersService');
 const app = express();
 const server = require('http').createServer(app);
-const PORT =8080;
+const PORT = 8080;
 const userService = require('./Socket/UsersService')
 
 if (!config.get('jwtPrivateKey')) {
@@ -13,6 +13,7 @@ if (!config.get('jwtPrivateKey')) {
 
 //DB connection
 const mongoose = require('mongoose');
+// mongoose.connect('mongodb://localhost/chatDB')
 mongoose.connect(config.get('db'))
     .then(() => console.log(`connected to ${config.get('db')} database`))
     .catch(() =>
@@ -38,7 +39,7 @@ app.use('/api/message', require('./Router/messages'))
 
 
 //Server up
-const serverSocket=server.listen(PORT, () => {
+const serverSocket = server.listen(PORT, () => {
     console.log(`Server is up on: ${PORT}`);
 });
 
@@ -48,31 +49,25 @@ const io = require('socket.io')(serverSocket, {
     }
 });
 let onlineUsers = []
-// const userJoin = (socketID, userID) => {
-//     const user = { socketID, userID }
-//     !users.some((user) => user.userID === userID) && users.push(user);
-
-// }
-// const getCurrentUser = (id) => {
-//     return users.find(user => user.userID === id);
-// }
-// const removeUser = (socketid) => {
-//     users = users.filter(user => user.socketID !== socketid)
-// }
-
-let c = 0;
-
+console.log(onlineUsers);
 io.on('connection', (socket) => {
     //Get the user when he connecting
     socket.on('addSenderToConnection', (userID) => {
-        console.log('A user: ' + userID + "  connected Socket ID: " + socket.id)
-        //Adding user to online users with his ID and his socket id he recived
-        userService.userJoin(socket.id, userID, onlineUsers);
+        try {
+            //Adding user to online users with his ID and his socket id he recived
+            if (userID)
+                onlineUsers = userService.userJoin(socket.id, userID, onlineUsers);
 
-        // userJoin(socket.id, userID);
+            //Send back to client all the online users
+            socket.emit('usersFromServer', onlineUsers)
+        }
+        catch (e) {
+            //Send back to client all the online users
+            io.emit('usersFromServer', onlineUsers)
+            socket.to(socket.id).emit('opponentExitGame');
+            console.log(e);
+        }
 
-        //Send back to client all the online users
-        socket.emit('usersFromServer', onlineUsers)
     })
 
     // Send and recive msg
@@ -91,7 +86,8 @@ io.on('connection', (socket) => {
         }
         //If the user is offline
         catch (e) {
-            console.log(e + 'user: ' + reciverID + ' is offline ');
+            // io.to(socket.id).emit('opponentExitGame');
+            console.log(e);
         }
 
     })
@@ -103,10 +99,11 @@ io.on('connection', (socket) => {
         try {
             const reciverUser = userService.getCurrentUser(reciverID, onlineUsers);
             //Send the game request
-            socket.to(reciverUser.socketID).emit('reciveGameRequest', senderID);
+            io.to(reciverUser.socketID).emit('reciveGameRequest', senderID);
         }
         catch (e) {
-            console.log(e + 'user: ' + reciverID + 'Cannt recive  ');
+            io.to(socket.id).emit('opponentOffline');
+            console.log(e);
         }
     })
 
@@ -119,7 +116,8 @@ io.on('connection', (socket) => {
             io.to(socket.id).to(reciverUser.socketID).emit('startGame', reciverUser.userID);
         }
         catch (e) {
-            console.log(e + 'user: ' + reciverID + 'Cannt recive  ');
+            io.to(socket.id).emit('opponentExitGame');
+            console.log(e);
         }
     })
 
@@ -131,7 +129,8 @@ io.on('connection', (socket) => {
             io.to(socket.id).to(reciverUser.socketID).emit('refreshBoard', { pointsClone });
         }
         catch (e) {
-            console.log(e + 'user: ' + reciverID + 'Cannt recive  ');
+            io.to(socket.id).emit('opponentExitGame');
+            console.log(e);
         }
     })
     //Turns handler
@@ -142,7 +141,8 @@ io.on('connection', (socket) => {
             io.to(socket.id).to(reciverUser.socketID).emit('handleTurns', isPlayer1Turn);
         }
         catch (e) {
-            console.log(e + 'user: ' + reciverID + 'Cannt recive  ');
+            io.to(socket.id).emit('opponentExitGame');
+            console.log(e);
         }
     })
     //Get and set player 1 eaten checkers
@@ -153,7 +153,8 @@ io.on('connection', (socket) => {
             io.to(socket.id).to(reciverUser.socketID).emit('getPlayer1EatenCheckers', { player1EatenCheckers });
         }
         catch (e) {
-            console.log(e + 'user: ' + reciverID + 'Cannt recive  ');
+            io.to(socket.id).emit('opponentExitGame');
+            console.log(e);
         }
     })
     //Get and set player 2 eaten checkers
@@ -164,7 +165,8 @@ io.on('connection', (socket) => {
             io.to(socket.id).to(reciverUser.socketID).emit('getPlayer2EatenCheckers', { player2EatenCheckers });
         }
         catch (e) {
-            console.log(e + 'user: ' + reciverID + 'Cannt recive  ');
+            io.to(socket.id).emit('opponentExitGame');
+            console.log(e);
         }
     })
 
@@ -176,7 +178,8 @@ io.on('connection', (socket) => {
             io.to(reciverUser.socketID).emit('getOppenentDicesValues', { val1, val2 });
         }
         catch (e) {
-            console.log(e + 'user: ' + reciverID + 'Cannt recive  ');
+            io.to(socketID).emit('opponentExitGame');
+            console.log(e);
         }
 
 
@@ -186,18 +189,27 @@ io.on('connection', (socket) => {
         try {
             const reciverUser = userService.getCurrentUser(userID, onlineUsers);
             console.log('Reciver socket id: ' + reciverUser.socketID);
-            socket.to(user.socketID).emit('opponentExitGame');
+            console.log('Sender socket id: ' + socket.id);
+
+            io.to(reciverUser.socketID).to(socket.id).emit('opponentExitGame');
         }
         catch (e) {
-            console.log(e + 'user: ' + userID + 'Cannt recive  ');
+            io.to(socket.id).emit('opponentExitGame');
+            console.log(e);
         }
     })
 
 
     //When disconnect
     socket.on('disconnect', () => {
-        console.log('user disconnect Socket id:' + socket.id);
-        userService.removeUser(socket.id, onlineUsers);
-        io.emit('usersFromServer', onlineUsers)
+        try {
+            console.log('user disconnect Socket id:' + socket.id);
+            onlineUsers = userService.removeUser(socket.id, onlineUsers);
+            console.log(onlineUsers);
+            io.emit('usersFromServer', onlineUsers)
+        }
+        catch (e) {
+            console.log(e);
+        }
     });
 })
