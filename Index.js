@@ -13,8 +13,8 @@ if (!config.get('jwtPrivateKey')) {
 
 //DB connection
 const mongoose = require('mongoose');
-// mongoose.connect('mongodb://localhost/chatDB')
-mongoose.connect(config.get('db'))
+mongoose.connect('mongodb://localhost/chatDB')
+// mongoose.connect(config.get('db'))
     .then(() => console.log(`connected to ${config.get('db')} database`))
     .catch(() =>
         console.log('somthing went wrong connection to the data base'));
